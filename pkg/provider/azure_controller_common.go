@@ -234,10 +234,12 @@ func (c *controllerCommon) AttachDisk(ctx context.Context, async bool, diskName,
 		return -1, err
 	}
 
+	klog.Warningf("AttachDisk %s, LockEntry on %s", diskURI, node)
 	c.lockMap.LockEntry(node)
 	unlock := false
 	defer func() {
 		if !unlock {
+			klog.Warningf("AttachDisk %s, UnlockEntry on %s", diskURI, node)
 			c.lockMap.UnlockEntry(node)
 		}
 	}()
@@ -324,8 +326,14 @@ func (c *controllerCommon) waitForUpdateResult(ctx context.Context, vmset VMSet,
 func (c *controllerCommon) insertAttachDiskRequest(diskURI, nodeName string, options *AttachDiskOptions) error {
 	var diskMap map[string]*AttachDiskOptions
 	attachDiskMapKey := nodeName + attachDiskMapKeySuffix
+
+	klog.Warningf("insertAttachDiskRequest LockEntry on %s, with disk attach %s", attachDiskMapKey, diskURI)
 	c.lockMap.LockEntry(attachDiskMapKey)
-	defer c.lockMap.UnlockEntry(attachDiskMapKey)
+	defer func() {
+		klog.Warningf("insertAttachDiskRequest(%s) on %s, diskMap len:%d, %s", diskURI, attachDiskMapKey, len(diskMap), diskMap)
+		c.lockMap.UnlockEntry(attachDiskMapKey)
+	}()
+
 	v, ok := c.attachDiskMap.Load(nodeName)
 	if ok {
 		if diskMap, ok = v.(map[string]*AttachDiskOptions); !ok {
@@ -351,8 +359,13 @@ func (c *controllerCommon) cleanAttachDiskRequests(nodeName string) (map[string]
 	var diskMap map[string]*AttachDiskOptions
 
 	attachDiskMapKey := nodeName + attachDiskMapKeySuffix
+	klog.Warningf("cleanAttachDiskRequests LockEntry on %s", attachDiskMapKey)
 	c.lockMap.LockEntry(attachDiskMapKey)
-	defer c.lockMap.UnlockEntry(attachDiskMapKey)
+	defer func() {
+		klog.Warningf("cleanAttachDiskRequests on %s, diskMap len:%d, %s", attachDiskMapKey, len(diskMap), diskMap)
+		c.lockMap.UnlockEntry(attachDiskMapKey)
+	}()
+
 	v, ok := c.attachDiskMap.Load(nodeName)
 	if !ok {
 		return diskMap, nil
@@ -388,8 +401,12 @@ func (c *controllerCommon) DetachDisk(ctx context.Context, diskName, diskURI str
 		return err
 	}
 
+	klog.Warningf("DetachDisk %s, LockEntry on %s", disk, node)
 	c.lockMap.LockEntry(node)
-	defer c.lockMap.UnlockEntry(node)
+	defer func() {
+		klog.Warningf("DetachDisk %s, UnlockEntry on %s", disk, node)
+		c.lockMap.UnlockEntry(node)
+	}()
 	diskMap, err := c.cleanDetachDiskRequests(node)
 	if err != nil {
 		return err
@@ -444,8 +461,12 @@ func (c *controllerCommon) UpdateVM(ctx context.Context, nodeName types.NodeName
 func (c *controllerCommon) insertDetachDiskRequest(diskName, diskURI, nodeName string) error {
 	var diskMap map[string]string
 	detachDiskMapKey := nodeName + detachDiskMapKeySuffix
+	klog.Warningf("insertDetachDiskRequest LockEntry on %s, with disk detach %s", detachDiskMapKey, diskURI)
 	c.lockMap.LockEntry(detachDiskMapKey)
-	defer c.lockMap.UnlockEntry(detachDiskMapKey)
+	defer func() {
+		klog.Warningf("insertDetachDiskRequest(%s) on %s, diskMap len:%d, %s", diskURI, detachDiskMapKey, len(diskMap), diskMap)
+		c.lockMap.UnlockEntry(detachDiskMapKey)
+	}()
 	v, ok := c.detachDiskMap.Load(nodeName)
 	if ok {
 		if diskMap, ok = v.(map[string]string); !ok {
@@ -469,10 +490,14 @@ func (c *controllerCommon) insertDetachDiskRequest(diskName, diskURI, nodeName s
 // return original detach disk requests
 func (c *controllerCommon) cleanDetachDiskRequests(nodeName string) (map[string]string, error) {
 	var diskMap map[string]string
-
 	detachDiskMapKey := nodeName + detachDiskMapKeySuffix
+	klog.Warningf("cleanDetachDiskRequests LockEntry on %s", detachDiskMapKey)
 	c.lockMap.LockEntry(detachDiskMapKey)
-	defer c.lockMap.UnlockEntry(detachDiskMapKey)
+	defer func() {
+		klog.Warningf("cleanDetachDiskRequests on %s, diskMap len:%d, %s", detachDiskMapKey, len(diskMap), diskMap)
+		defer c.lockMap.UnlockEntry(detachDiskMapKey)
+	}()
+
 	v, ok := c.detachDiskMap.Load(nodeName)
 	if !ok {
 		return diskMap, nil
