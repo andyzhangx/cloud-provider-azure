@@ -28,4 +28,5 @@ type Interface interface {
 	utils.SubResourceGetFunc[armprivatedns.VirtualNetworkLink]
 	utils.SubResourceCreateOrUpdateFunc[armprivatedns.VirtualNetworkLink]
 	utils.SubResourceDeleteFunc[armprivatedns.VirtualNetworkLink]
+	utils.SubResourceListFunc[armprivatedns.VirtualNetworkLink]
 }

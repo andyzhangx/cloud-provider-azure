@@ -788,6 +788,29 @@ func (az *AccountRepo) createPrivateDNSZone(ctx context.Context, vnetResourceGro
 	return nil
 }
 
+// checkVNetLink checks if the virtual network link exists for the given private DNS zone
+// and virtual network resource group. It returns true if the link exists, false otherwise.
+func (az *AccountRepo) checkVNetLink(ctx context.Context, vnetResourceGroup, privateDNSZoneName, vnetName string) (bool, error) {
+	klog.V(2).Infof("Checking virtual link for vnet(%s) and DNS Zone(%s) in resourceGroup(%s)", vnetName, privateDNSZoneName, vnetResourceGroup)
+	clientFactory := az.NetworkClientFactory
+	if clientFactory == nil {
+		// multi-tenant support
+		clientFactory = az.ComputeClientFactory
+	}
+	vnetLinks, err := clientFactory.GetVirtualNetworkLinkClient().List(ctx, vnetResourceGroup, privateDNSZoneName)
+	if err != nil {
+		return false, err
+	}
+	for _, vnetLink := range vnetLinks {
+		if vnetLink.Properties != nil && vnetLink.Properties.VirtualNetwork != nil && vnetLink.Properties.VirtualNetwork.ID != nil {
+			if strings.Contains(*vnetLink.Properties.VirtualNetwork.ID, vnetName) {
+				klog.V(2).Infof("Found virtual link for vnet(%s) and DNS Zone(%s) in resourceGroup(%s)", vnetName, privateDNSZoneName, vnetResourceGroup)
+				return true, nil
+			}
+		}
+	}
+}
+
 func (az *AccountRepo) createVNetLink(ctx context.Context, vNetLinkName, vnetResourceGroup, vnetName, privateDNSZoneName string) error {
 	klog.V(2).Infof("Creating virtual link for vnet(%s) and DNS Zone(%s) in resourceGroup(%s)", vNetLinkName, privateDNSZoneName, vnetResourceGroup)
 	clientFactory := az.NetworkClientFactory
