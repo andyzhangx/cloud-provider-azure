@@ -22,6 +22,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 
+	"sigs.k8s.io/cloud-provider-azure/pkg/azclient/policy/retryaftermin"
 	"sigs.k8s.io/cloud-provider-azure/pkg/azclient/utils"
 )
 
@@ -37,6 +38,8 @@ type ARMClientConfig struct {
 	TenantID string `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
 	// The AAD Tenant ID for the Subscription that the network resources are deployed in.
 	NetworkResourceTenantID string `json:"networkResourceTenantID,omitempty" yaml:"networkResourceTenantID,omitempty"`
+	// If true, HTTP responses' retry-after header will be overridden with the configured minimum retry-after value if lower than the configured minimum
+	EnableMinimumRetryAfter bool `json:"enableMinimumRetryAfter,omitempty" yaml:"enableMinimumRetryAfter,omitempty"`
 }
 
 func (config *ARMClientConfig) GetTenantID() string {
@@ -59,6 +62,10 @@ func GetAzCoreClientOption(armConfig *ARMClientConfig) (*policy.ClientOptions, e
 			return nil, err
 		}
 		azCoreClientConfig.Cloud = *cloudConfig
+		if armConfig.EnableMinimumRetryAfter {
+			// Add the minimum retry-after policy to enforce a minimum retry-after value configured in clientConfig.Retry.RetryDelay (default 5s)
+			azCoreClientConfig.PerRetryPolicies = append(azCoreClientConfig.PerRetryPolicies, retryaftermin.NewRetryAfterMinPolicy(azCoreClientConfig.Retry.RetryDelay))
+		}
 	}
 	return &azCoreClientConfig, nil
 }
