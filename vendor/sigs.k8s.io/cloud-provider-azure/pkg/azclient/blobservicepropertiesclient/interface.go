@@ -20,7 +20,7 @@ package blobservicepropertiesclient
 import (
 	"context"
 
-	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
 )
 
 // +azure:client:resource=BlobServiceProperties,packageName=github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage,packageAlias=armstorage,clientName=BlobServicesClient,expand=false,crossSubFactory=true,azureStackCloudAPIVersion="2019-06-01",mooncakeApiVersion="2023-05-01"
