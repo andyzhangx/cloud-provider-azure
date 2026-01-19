@@ -30,7 +30,6 @@ import (
 	reflect "reflect"
 
 	gomock "go.uber.org/mock/gomock"
-
 	accountclient "sigs.k8s.io/cloud-provider-azure/pkg/azclient/accountclient"
 	availabilitysetclient "sigs.k8s.io/cloud-provider-azure/pkg/azclient/availabilitysetclient"
 	backendaddresspoolclient "sigs.k8s.io/cloud-provider-azure/pkg/azclient/backendaddresspoolclient"
